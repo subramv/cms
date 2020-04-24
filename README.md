@@ -1,1 +1,19 @@
-tools for working with CMS API in R
+# R API Client for CMS Medicare Reimbursement Data
+
+## Overview
+
+cms is an R package that serves as an API client for CMS Medicare reimbursement data.
+It increases ease of programmatic access to healthcare reimbursement via the R programming language.
+
+## Installation
+
+The cms R package is not currently ready for use.
+To install the development version, run the following:
+```r
+devtools::install_github("subramv1/cms")
+```
+
+## Sample code
+
+## Functionality
+
