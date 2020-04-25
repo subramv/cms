@@ -1,4 +1,4 @@
-# R API Client for CMS Medicare Reimbursement Data
+# cms: R API Client for CMS Medicare Reimbursement Data
 
 [![Travis build status](https://travis-ci.org/subramv1/cms.svg?branch=master)](https://travis-ci.org/subramv1/cms)
 [![AppVeyor build status](https://ci.appveyor.com/api/projects/status/github/subramv1/cms?branch=master&svg=true)](https://ci.appveyor.com/project/subramv1/cms)
