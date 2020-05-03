@@ -21,15 +21,16 @@ localdb <- function(year,                    # last two digits of desired look-u
   # define joining function
   joinrevisions <- function(inputlist){
     jointwo <- function(db1, db2){
-      db1 %>% dplyr::left_join(db2, by = c('Year', 'Carrier Number', 'Locality', 'HCPCS Code', 'Modifier', 'Status Code', 'PCTC Indicator', 'Multiple Surgery Indicator', 
-                                                       '50% Therapy Reduction Amount (non-institutional)', '50% Therapy Reduction Amount (institutional)', 'OPPS Indicator')) %>%
-      dplyr::mutate('Facility Fee' = dplyr::coalesce(`Facility Fee.y`, `Facility Fee.x`), 'Non-Facility Fee' = dplyr::coalesce(`Non-Facility Fee.y`, `Non-Facility Fee.x`), 'OPPS Facility Fee' = 
-                      dplyr::coalesce(`OPPS Facility Fee.y`, `OPPS Facility Fee.x`), 'OPPS Non-Facility Fee' = dplyr::coalesce(`OPPS Non-Facility Fee.y`, `OPPS Non-Facility Fee.x`)) %>%
-      dplyr::select(-`Facility Fee.x`, -`Facility Fee.y`, -`Non-Facility Fee.x`, -`Non-Facility Fee.y`, -`OPPS Facility Fee.x`, 
-                    -`OPPS Facility Fee.y`, -`OPPS Non-Facility Fee.x`, -`OPPS Non-Facility Fee.y`) %>%
-      dplyr::full_join(dplyr::anti_join(db2, db1, by = 'HCPCS Code'), by = c("Year", "Carrier Number", "Locality", "HCPCS Code", "Modifier", "PCTC Indicator", "Status Code", 
+      temp <- dplyr::left_join(db1, db2, by = c('Year', 'Carrier Number', 'Locality', 'HCPCS Code', 'Modifier', 'Status Code', 'PCTC Indicator', 'Multiple Surgery Indicator', 
+                                                       '50% Therapy Reduction Amount (non-institutional)', '50% Therapy Reduction Amount (institutional)', 'OPPS Indicator'))
+      temp <- dplyr::mutate(temp, 'Facility Fee' = dplyr::coalesce(`Facility Fee.y`, `Facility Fee.x`), 'Non-Facility Fee' = dplyr::coalesce(`Non-Facility Fee.y`, `Non-Facility Fee.x`), 'OPPS Facility Fee' = 
+                      dplyr::coalesce(`OPPS Facility Fee.y`, `OPPS Facility Fee.x`), 'OPPS Non-Facility Fee' = dplyr::coalesce(`OPPS Non-Facility Fee.y`, `OPPS Non-Facility Fee.x`))
+      temp <- dplyr::select(temp, -`Facility Fee.x`, -`Facility Fee.y`, -`Non-Facility Fee.x`, -`Non-Facility Fee.y`, -`OPPS Facility Fee.x`, 
+                    -`OPPS Facility Fee.y`, -`OPPS Non-Facility Fee.x`, -`OPPS Non-Facility Fee.y`)
+      temp <- dplyr::full_join(temp, dplyr::anti_join(db2, db1, by = 'HCPCS Code'), by = c("Year", "Carrier Number", "Locality", "HCPCS Code", "Modifier", "PCTC Indicator", "Status Code", 
                                                                                      "Multiple Surgery Indicator", "50% Therapy Reduction Amount (non-institutional)", "50% Therapy Reduction Amount (institutional)", 
                                                                                      "OPPS Indicator", "Facility Fee", "Non-Facility Fee", "OPPS Facility Fee", "OPPS Non-Facility Fee")) # addend non-overlapping rows
+      return(temp)
     }
     recursivejoin <- function(dblist, index){
       if (index >2){
@@ -45,7 +46,9 @@ localdb <- function(year,                    # last two digits of desired look-u
   
   landingurl <- "https://www.cms.gov/Medicare/Medicare-Fee-for-Service-Payment/PhysicianFeeSched/PFS-National-Payment-Amount-File?items_per_page=100&combine="
   baseurl <- "https://www.cms.gov"
-  links<- xml2::read_html(landingurl) %>% rvest::html_nodes("a") %>% rvest::html_attr("href") 
+  links <- xml2::read_html(landingurl)
+  links <- rvest::html_nodes(links, "a")
+  links <- rvest::html_attr(links, "href") 
   links <- links[grepl(paste('pf.{3,}', year,'[abcd]',sep=''), links, ignore.case=T)]
   links <- links[order(links, substr(links, nchar(links), nchar(links)))] # order alphabetically
   if (!keep.downloads){
@@ -53,7 +56,9 @@ localdb <- function(year,                    # last two digits of desired look-u
   }
   mpfs_all<-lapply(1:length(links), function(x){
     siteurl <- paste(baseurl, links[x], sep='')
-    dblink <- xml2::read_html(siteurl) %>% rvest::html_nodes("a") %>% rvest::html_attr("href")
+    dblink <- xml2::read_html(siteurl)
+    dblink <- rvest::html_nodes(dblink, "a")
+    dblink <- rvest::html_attr(dblink, "href")
     dblink <- grep("\\.zip", dblink, value = T)
     dblink <- paste(baseurl, dblink, sep = '')
     path.zip <- paste(storage.path, sub(".*/", "", dblink), sep = '/')
@@ -61,14 +66,14 @@ localdb <- function(year,                    # last two digits of desired look-u
     zipped.txt.name <- grep('\\.txt$', unzip(path.zip, list=TRUE)$Name, 
                              ignore.case=TRUE, value=TRUE)
     unzip(path.zip, exdir = storage.path, files = zipped.txt.name)
-    outputdb <- suppressMessages(suppressWarnings(readr::read_delim(paste(storage.path, zipped.txt.name, sep = '/'), delim = ',', 
+    outputdb <- suppressMessages(suppressWarnings(readr::read_delim(paste(storage.path, zipped.txt.name, sep = '/'), delim = ',', progress = F, 
                                               col_names = c("Year", "Carrier Number", "Locality", "HCPCS Code", "Modifier", "Non-Facility Fee", 
                                                       "Facility Fee", "Filler", "PCTC Indicator", "Status Code", "Multiple Surgery Indicator", 
                                                       "50% Therapy Reduction Amount (non-institutional)", "50% Therapy Reduction Amount (institutional)", 
-                                                      "OPPS Indicator", "OPPS Non-Facility Fee", "OPPS Facility Fee")) %>%
-      dplyr::select(-8) # remove filler column
+                                                      "OPPS Indicator", "OPPS Non-Facility Fee", "OPPS Facility Fee"))
     ))
-    outputdb <- outputdb %>%  dplyr::slice(-((nrow(outputdb)-3):nrow(outputdb)))
+    outputdb <- dplyr::select(outputdb, -8) # remove filler column
+    outputdb <- dplyr::slice(outputdb, -((nrow(outputdb)-3):nrow(outputdb)))
     unlink (paste(storage.path, zipped.txt.name, sep = '/')) # delete unzipped .txt
     if(!keep.downloads){
       deletepaths[x] <<- path.zip  # save paths for later cleanup
@@ -82,20 +87,18 @@ localdb <- function(year,                    # last two digits of desired look-u
     }
   }
   if(length(mpfs_all) == 1) {
-    res<- mpfs_all[[1]] %>%  
-      dplyr::mutate(Modifier = as.factor(Modifier)) %>%
-      dplyr::mutate(Modifier = dplyr::recode(Modifier, "  " = "none"))
+    res <- mpfs_all[[1]] 
+    res <- dplyr::mutate(res, Modifier = as.factor(Modifier)) 
+    res <- dplyr::mutate(res, Modifier = dplyr::recode(Modifier, "  " = "none"))
   } else{
-    res <- joinrevisions(mpfs_all) %>%  
-      dplyr::mutate(Modifier = as.factor(Modifier)) %>%
-      dplyr::mutate(Modifier = dplyr::recode(Modifier, "  " = "none"))
+    res <- joinrevisions(mpfs_all)  
+    res<- dplyr::mutate(res, Modifier = as.factor(Modifier))
+    res<- dplyr::mutate(res, Modifier = dplyr::recode(Modifier, "  " = "none"))
   }
   if(!missing(locality)){
     assertthat::assert_that(carrier.number %in% res$`Carrier Number`, msg = 'Provided locality does not match entries in this database')
     assertthat::assert_that(localityid %in% res$Locality, msg = 'Provided locality does not match entries in this database')
-    res <- res %>% 
-      dplyr::filter(`Carrier Number` == carrier.number) %>%
-      dplyr::filter(`Locality` == localityid)
+    res <- dplyr::filter(res, `Carrier Number` == carrier.number, `Locality` == localityid)
   }
   return(res)
 }
