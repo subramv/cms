@@ -3,17 +3,20 @@ library(tidyverse)
 library(assertthat)
 
 localdb <- function(year,                    # last two digits of desired look-up year
-                    carrier.number,          # optional: valid Carrier Number; if not specified, will output full database
-                    locality,                # optional: valid locality code; if not specified, will output all matching within carrier number
+                    locality,                # optional: valid 7-digit HCFS identification number; if not specified, will output full database
                     storage.path = NULL,     # directory in which storage folder exists or should be created (default: current working dir)
                     keep.downloads = T       # if T, downloaded files will not be deleted from storage folder, and will not need to be redownloaded for future operations.
                                              # if F, downloaded files will be removed once database is generated. storage folder will be deleted if empty
                     ){
-  if(!missing(locality)) assert_that(!missing(carrier.number), msg = 'Carrier number must be provided if locality is specified')
+  if(!missing(locality)) {
+    assert_that(nchar(locality) == 7, msg = 'Locality code must be a valid 7-digit HCFS identification number')
+    carrier.number <- substr(as.character(locality), 1, 5)
+    localityid <- substr(as.character(locality), 6, 7)
+    }
   assert_that(14<year & year<=20, msg = 'year must be a two digit integer between 14 and 20')
   storage.path = paste(storage.path, 'storage', sep = '')
   if(!dir.exists(storage.path)) dir.create(storage.path) # create storage folder if it does not exist
-  assert_that(dir.exists(storage_path), msg = 'Storage folder not found or could not be created; check that provided storage path is valid and R has write permissions')
+  assert_that(dir.exists(storage.path), msg = 'Storage folder not found or could not be created; check that provided storage path is valid and R has write permissions')
   # define joining function
   joinall <- function(inputlist){
     recursivejoin <- function(dblist, index){
@@ -84,16 +87,25 @@ localdb <- function(year,                    # last two digits of desired look-u
     }
   }
   if(length(mpfs_all) == 1) {
-    res<- mpfs_all[[1]]
+    res<- mpfs_all[[1]] %>%  
+      mutate(Modifier = forcats::as_factor(Modifier)) %>%
+      mutate(Modifier = recode(Modifier, "  " = "none"))
   } else{
     res <- joinall(mpfs_all) %>%  
       mutate(Modifier = forcats::as_factor(Modifier)) %>%
       mutate(Modifier = recode(Modifier, "  " = "none"))
   }
-  res <- res %>% filter(`Carrier Number` == carrier.number) %>%
-    filter(`Locality` == locality)
+  if(!missing(locality)){
+    assert_that(carrier.number %in% res$`Carrier Number`, msg = 'Provided locality does not match entries in this database')
+    assert_that(localityid %in% res$Locality, msg = 'Provided locality does not match entries in this database')
+    res <- res %>% 
+      filter(`Carrier Number` == carrier.number) %>%
+      filter(`Locality` == localityid)
+  }
+  return(res)
 }
+
   
-mpfs_oh <-res %>% filter(`Carrier Number` == 15202) # extract OH CPT codes
-readr::write_csv(mpfs_oh, 'Ohio CPT DB.csv')
+
+
   
