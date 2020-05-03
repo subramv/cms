@@ -3,11 +3,13 @@ library(tidyverse)
 library(assertthat)
 
 localdb <- function(year,                    # last two digits of desired look-up year
-                    locality = NULL,         # valid locality code; if not specified, will output full database
+                    carrier.number,          # optional: valid Carrier Number; if not specified, will output full database
+                    locality,                # optional: valid locality code; if not specified, will output all matching within carrier number
                     storage.path = NULL,     # directory in which storage folder exists or should be created (default: current working dir)
-                    keep.downloads = T       # if T, downloaded files will not be deleted from storage folder, and will not have to be redownloaded
-                    #output filename, output storage path (default: current working dir)
+                    keep.downloads = T       # if T, downloaded files will not be deleted from storage folder, and will not need to be redownloaded for future operations.
+                                             # if F, downloaded files will be removed once database is generated. storage folder will be deleted if empty
                     ){
+  if(!missing(locality)) assert_that(!missing(carrier.number), msg = 'Carrier number must be provided if locality is specified')
   assert_that(14<year & year<=20, msg = 'year must be a two digit integer between 14 and 20')
   storage.path = paste(storage.path, 'storage', sep = '')
   if(!dir.exists(storage.path)) dir.create(storage.path) # create storage folder if it does not exist
@@ -23,7 +25,9 @@ localdb <- function(year,                    # last two digits of desired look-u
                    coalesce(`OPPS Facility Fee.y`, `OPPS Facility Fee.x`), 'OPPS Non-Facility Fee' = coalesce(`OPPS Non-Facility Fee.y`, `OPPS Non-Facility Fee.x`)) %>%
           select(-`Facility Fee.x`, -`Facility Fee.y`, -`Non-Facility Fee.x`, -`Non-Facility Fee.y`, -`OPPS Facility Fee.x`, 
                  -`OPPS Facility Fee.y`, -`OPPS Non-Facility Fee.x`, -`OPPS Non-Facility Fee.y`) %>%
-          full_join(anti_join(dblist[[2]], db1, by = 'HCPCS Code')) # addend non-overlapping rows
+          full_join(anti_join(dblist[[2]], db1, by = 'HCPCS Code'), by = c("Year", "Carrier Number", "Locality", "HCPCS Code", "Modifier", "PCTC Indicator", "Status Code", 
+                                                                           "Multiple Surgery Indicator", "50% Therapy Reduction Amount (non-institutional)", "50% Therapy Reduction Amount (institutional)", 
+                                                                           "OPPS Indicator", "Facility Fee", "Non-Facility Fee", "OPPS Facility Fee", "OPPS Non-Facility Fee")) # addend non-overlapping rows
         return(res)
       } else{
         res<- dblist[[1]] %>% left_join(dblist[[2]], by = c('Year', 'Carrier Number', 'Locality', 'HCPCS Code', 'Modifier', 'Status Code', 'PCTC Indicator', 'Multiple Surgery Indicator', 
@@ -32,7 +36,9 @@ localdb <- function(year,                    # last two digits of desired look-u
                    coalesce(`OPPS Facility Fee.y`, `OPPS Facility Fee.x`), 'OPPS Non-Facility Fee' = coalesce(`OPPS Non-Facility Fee.y`, `OPPS Non-Facility Fee.x`)) %>%
           select(-`Facility Fee.x`, -`Facility Fee.y`, -`Non-Facility Fee.x`, -`Non-Facility Fee.y`, -`OPPS Facility Fee.x`, 
                  -`OPPS Facility Fee.y`, -`OPPS Non-Facility Fee.x`, -`OPPS Non-Facility Fee.y`) %>%
-          full_join(anti_join(dblist[[2]], dblist[[1]], by = 'HCPCS Code')) # addend non-overlapping rows
+          full_join(anti_join(dblist[[2]], dblist[[1]], by = 'HCPCS Code'), by = c("Year", "Carrier Number", "Locality", "HCPCS Code", "Modifier", "PCTC Indicator", "Status Code", 
+                                                                                   "Multiple Surgery Indicator", "50% Therapy Reduction Amount (non-institutional)", "50% Therapy Reduction Amount (institutional)", 
+                                                                                   "OPPS Indicator", "Facility Fee", "Non-Facility Fee", "OPPS Facility Fee", "OPPS Non-Facility Fee")) # addend non-overlapping rows
         return(res)
       }
     }
@@ -45,6 +51,9 @@ localdb <- function(year,                    # last two digits of desired look-u
   links<- read_html(landingurl) %>% html_nodes("a") %>% html_attr("href") 
   links <- links[grepl(paste('pf.{3,}', year,'[abcd]',sep=''), links, ignore.case=T)]
   links <- links[order(links, substr(links, nchar(links), nchar(links)))] # order alphabetically
+  if (!keep.downloads){
+    deletepaths <- vector(length = length(links), mode = 'character')
+  }
   mpfs_all<-map(1:length(links), function(x){
     siteurl <- paste(baseurl, links[x], sep='')
     dblink <- read_html(siteurl) %>% html_nodes("a") %>% html_attr("href") %>% str_subset("\\.zip")
@@ -63,17 +72,28 @@ localdb <- function(year,                    # last two digits of desired look-u
     ))
     outputdb <- outputdb %>%  slice(-((nrow(outputdb)-3):nrow(outputdb)))
     unlink (paste(storage.path, zipped.txt.name, sep = '/')) # delete unzipped .txt
+    if(!keep.downloads){
+      deletepaths[x] <<- path.zip  # save paths for later cleanup
+    }
     return(outputdb)
   })
+  if(!keep.downloads){
+    unlink(deletepaths)
+    if (length(list.files(storage.path)) == 0){
+      unlink(storage.path, recursive = T)
+    }
+  }
   if(length(mpfs_all) == 1) {
-    return(mpfs_all[[1]])
+    res<- mpfs_all[[1]]
   } else{
     res <- joinall(mpfs_all) %>%  
       mutate(Modifier = forcats::as_factor(Modifier)) %>%
       mutate(Modifier = recode(Modifier, "  " = "none"))
-    return(res)
   }
+  res <- res %>% filter(`Carrier Number` == carrier.number) %>%
+    filter(`Locality` == locality)
 }
   
-  
+mpfs_oh <-res %>% filter(`Carrier Number` == 15202) # extract OH CPT codes
+readr::write_csv(mpfs_oh, 'Ohio CPT DB.csv')
   
