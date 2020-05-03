@@ -10,6 +10,8 @@ localdb <- function(year,                    # last two digits of desired look-u
   links <- links[grepl(paste('pf.{3,}', year,'[abcd]',sep=''), links, ignore.case=T)]
   mpfs_all<-map(1:length(links), function(x){
     siteurl <- paste(baseurl, links[x], sep='')
+    dblink <- read_html(siteurl) %>% html_nodes("a") %>% html_attr("href")
+    #dblink <- dblink[grepl]  
   })
   
   
