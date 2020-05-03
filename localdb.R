@@ -5,9 +5,12 @@ localdb <- function(year,                    # last two digits of desired look-u
                     locality = NULL          # valid locality code; if not specified, will output full database
                     ){
   landingurl <- "https://www.cms.gov/Medicare/Medicare-Fee-for-Service-Payment/PhysicianFeeSched/PFS-National-Payment-Amount-File?items_per_page=100&combine="
-  baseurl <- substr(landingurl, 1, (str_length(landingurl)-28))
-  links<- read_html(landingurl) %>% html_nodes("a") %>% html_text(trim = T)
-  links <- links[grepl(year, links)]
+  baseurl <- "https://www.cms.gov"
+  links<- read_html(landingurl) %>% html_nodes("a") %>% html_attr("href") 
+  links <- links[grepl(paste('pf.{3,}', year,'[abcd]',sep=''), links, ignore.case=T)]
+  mpfs_all<-map(1:length(links), function(x){
+    siteurl <- paste(baseurl, links[x], sep='')
+  })
   
   
   mpfs_rev <- readr::read_delim("PFREV20B.txt", delim=',', col_names = c("Year", "Carrier Number", "Locality", "HCPCS Code", "Modifier", "Non-Facility Fee", 
