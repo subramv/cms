@@ -1,17 +1,40 @@
 library(rvest)
 library(tidyverse)
+library(assertthat)
 
 localdb <- function(year,                    # last two digits of desired look-up year
-                    locality = NULL          # valid locality code; if not specified, will output full database
+                    locality = NULL,         # valid locality code; if not specified, will output full database
+                    storage.path = NULL,     # directory in which storage folder exists or should be created (default: current working dir)
+                    keep.downloads = T       # if T, downloaded files will not be deleted from storage folder, and will not have to be redownloaded
+                    #output filename, output storage path (default: current working dir)
                     ){
+  assert_that(14<year & year<=20, msg = 'year must be a two digit integer between 14 and 20')
+  storage.path = paste(storage.path, 'storage', sep = '')
+  if(!dir.exists(storage.path)) dir.create(storage.path) # create storage folder if it does not exist
+  assert_that(dir.exists(storage_path), msg = 'Storage folder not found or could not be created; check that provided storage path is valid and R has write permissions')
   landingurl <- "https://www.cms.gov/Medicare/Medicare-Fee-for-Service-Payment/PhysicianFeeSched/PFS-National-Payment-Amount-File?items_per_page=100&combine="
   baseurl <- "https://www.cms.gov"
   links<- read_html(landingurl) %>% html_nodes("a") %>% html_attr("href") 
   links <- links[grepl(paste('pf.{3,}', year,'[abcd]',sep=''), links, ignore.case=T)]
   mpfs_all<-map(1:length(links), function(x){
     siteurl <- paste(baseurl, links[x], sep='')
-    dblink <- read_html(siteurl) %>% html_nodes("a") %>% html_attr("href")
-    #dblink <- dblink[grepl]  
+    dblink <- read_html(siteurl) %>% html_nodes("a") %>% html_attr("href") %>% str_subset("\\.zip")
+    dblink <- paste(baseurl, dblink, sep = '')
+    path.zip <- paste(storage.path, sub(".*/", "", dblink), sep = '/')
+    if(!file.exists(path.zip)) download.file(dblink, path.zip)
+    zipped.txt.name <- grep('\\.txt$', unzip(path.zip, list=TRUE)$Name, 
+                             ignore.case=TRUE, value=TRUE)
+    unzip(path.zip, exdir = storage.path, files = zipped.txt.name)
+    outputdb <- suppressMessages(suppressWarnings(readr::read_delim(paste(storage.path, zipped.txt.name, sep = '/'), delim = ',', 
+                                              col_names = c("Year", "Carrier Number", "Locality", "HCPCS Code", "Modifier", "Non-Facility Fee", 
+                                                      "Facility Fee", "Filler", "PCTC Indicator", "Status Code", "Multiple Surgery Indicator", 
+                                                      "50% Therapy Reduction Amount (non-institutional)", "50% Therapy Reduction Amount (institutional)", 
+                                                      "OPPS Indicator", "OPPS Non-Facility Fee", "OPPS Facility Fee")) %>%
+      select(-8) # remove filler column
+    ))
+    outputdb <- outputdb %>%  slice(-((nrow(outputdb)-3):nrow(outputdb)))
+    unlink (paste(storage.path, zipped.txt.name, sep = '/')) # delete unzipped .txt
+    return(outputdb)
   })
   
   
