@@ -1,5 +1,5 @@
 Package: cms
-Title: API Client for CMS Medicare Reimbursement
+Title: Tools for Calculating CMS Medicare Reimbursement
 Version: 0.0.0.9000
 Authors@R: 
     c(person(given = "Vigneshwar", family = "Subramanian",
@@ -8,6 +8,12 @@ Authors@R:
       person(given = "Raoul", family = "Wadhwa",
              role = c("aut"), email = "raoulwadhwa@gmail.com"))
 Description: What the package does (one paragraph).
+Imports:
+    xml2,
+    rvest,
+    dplyr,
+    readr,
+    assertthat
 License: What license it uses
 Encoding: UTF-8
 LazyData: true

@@ -1,8 +1,3 @@
-library(rvest)
-library(dplyr)
-library(readr)
-library(assertthat)
-
 localdb <- function(year,                    # last two digits of desired look-up year
                     locality,                # optional: valid 7-digit HCFS identification number; if not specified, will output full database
                     storage.path = NULL,     # directory in which storage folder exists or should be created (default: current working dir)
