@@ -2,8 +2,8 @@
 
 # libraries
 # --------------------------------------
-library('tidyverse')
-library('assertthat')
+#library('dplyr')
+#library('assertthat')
 
 # read in database
 # --------------------------------------
@@ -13,23 +13,17 @@ library('assertthat')
 # function that takes a a vector of HCPCS codes and corresponding modifiers and returns a vector 
 # of the revenue per procedure for each code
 cptlookup <-  function(data) {    # data frame containing vector of HCPCS codes, vector of corresponding modifiers, boolean vector
-  # of whether procedure was done inpatient, boolean vector of whether procedures were performed at facility
-  assert_that(is.data.frame(data), msg = 'Input must be a data frame')  # check input argument
-  assert_that(all(pull(data, 1) %in% mpfs$`HCPCS Code`), msg = paste('HCPCS codes in rows', paste(which(!pull(data,1) %in% mpfs$`HCPCS Code`), collapse = ", "), "are not known"))
-  assert_that(all(pull(data, 2) %in% mpfs$Modifier), msg = paste('Modifiers in rows', paste(which(!pull(data, 2) %in% mpfs$Modifier), collapse = ", "), "are not known"))
-  assert_that(is_logical(pull(data,3)), msg = 'Vector of inpatient values must be boolean')
-  assert_that(is_logical(pull(data,4)), msg = 'Vector of facility values must be boolean')
+  # of whether procedures were performed at facility
+  assertthat::assert_that(ncol(data)>=3, msg = 'Input must be a data frame with at least 3 columns')  # check input argument
+  assertthat::assert_that(all(dplyr::pull(data, 1) %in% mpfs$`HCPCS Code`), msg = paste('HCPCS codes in rows', paste(which(!pull(data,1) %in% mpfs$`HCPCS Code`), collapse = ", "), "are not known"))
+  assertthat::assert_that(all(dplyr::pull(data, 2) %in% mpfs$Modifier), msg = paste('Modifiers in rows', paste(which(!pull(data, 2) %in% mpfs$Modifier), collapse = ", "), "are not known"))
+  assertthat::assert_that(is.logical(dplyr::pull(data,3)), msg = 'Vector of facility values must be boolean')
   #assert_that(all(is_logical))
-  res <- map(1:nrow(data), function(x) {
-    pay <- mpfs %>% filter(`HCPCS Code` == data[[x, 1]], `Modifier` == data[[x, 2]]) %>% select(12:15)
-    if (data[[x, 3]]) {
-      if (data[[x, 4]]) {return(pay[[1]])} # Inpatient + Facility = Facility Fee
-      else {return(pay[[2]])} # Inpatient + Non-Facility = Facility Fee
-    }
-    else{
-      if (data[[x, 4]]) {return(pay[[4]])} # Outpatient + Facility = OPPS Facility Fee
-      else {return(pay[[3]])} # Outpatient + Non-facility = OPPS Non-Facility Fee
-    }
+  res <- lapply(1:nrow(data), function(x) {
+    pay <- dplyr::filter(mpfs, `HCPCS Code` == data[[x, 1]], `Modifier` == data[[x, 2]])
+    pay <- select(pay, 12:13)
+    if (data[[x, 3]]) {return(pay[[1]])} # Facility = Facility Fee
+      else {return(pay[[2]])} # Non-Facility = Non-Facility Fee
   })
   as.numeric(unlist(res)) # return vector of revenue per procedure
 }
