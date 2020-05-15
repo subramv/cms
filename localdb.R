@@ -13,30 +13,6 @@ localdb <- function(year,                    # last two digits of desired look-u
   storage.path = paste(storage.path, 'storage', sep = '')
   if(!dir.exists(storage.path)) dir.create(storage.path) # create storage folder if it does not exist
   assertthat::assert_that(dir.exists(storage.path), msg = 'Storage folder not found or could not be created; check that provided storage path is valid and R has write permissions')
-  # define joining function
-  joinrevisions <- function(inputlist){
-    jointwo <- function(db1, db2){
-      temp <- dplyr::left_join(db1, db2, by = c('Year', 'Carrier Number', 'Locality', 'HCPCS Code', 'Modifier', 'Status Code', 'PCTC Indicator', 'Multiple Surgery Indicator', 
-                                                       '50% Therapy Reduction Amount (non-institutional)', '50% Therapy Reduction Amount (institutional)', 'OPPS Indicator'))
-      temp <- dplyr::mutate(temp, 'Facility Fee' = dplyr::coalesce(`Facility Fee.y`, `Facility Fee.x`), 'Non-Facility Fee' = dplyr::coalesce(`Non-Facility Fee.y`, `Non-Facility Fee.x`), 'OPPS Facility Fee' = 
-                      dplyr::coalesce(`OPPS Facility Fee.y`, `OPPS Facility Fee.x`), 'OPPS Non-Facility Fee' = dplyr::coalesce(`OPPS Non-Facility Fee.y`, `OPPS Non-Facility Fee.x`))
-      temp <- dplyr::select(temp, -`Facility Fee.x`, -`Facility Fee.y`, -`Non-Facility Fee.x`, -`Non-Facility Fee.y`, -`OPPS Facility Fee.x`, 
-                    -`OPPS Facility Fee.y`, -`OPPS Non-Facility Fee.x`, -`OPPS Non-Facility Fee.y`)
-      temp <- dplyr::full_join(temp, dplyr::anti_join(db2, db1, by = 'HCPCS Code'), by = c("Year", "Carrier Number", "Locality", "HCPCS Code", "Modifier", "PCTC Indicator", "Status Code", 
-                                                                                     "Multiple Surgery Indicator", "50% Therapy Reduction Amount (non-institutional)", "50% Therapy Reduction Amount (institutional)", 
-                                                                                     "OPPS Indicator", "Facility Fee", "Non-Facility Fee", "OPPS Facility Fee", "OPPS Non-Facility Fee")) # addend non-overlapping rows
-      return(temp)
-    }
-    recursivejoin <- function(dblist, index){
-      if (index >2){
-        db1 <- Recall(dblist, index-1)
-        jointwo(db1, dblist[[index]])
-      } else{
-        jointwo(dblist[[1]], dblist[[2]])
-      }
-    }
-    recursivejoin(inputlist, length(inputlist))
-    }
   # --------------------------------------------
   
   landingurl <- "https://www.cms.gov/Medicare/Medicare-Fee-for-Service-Payment/PhysicianFeeSched/PFS-National-Payment-Amount-File?items_per_page=100&combine="
@@ -62,12 +38,29 @@ localdb <- function(year,                    # last two digits of desired look-u
                              ignore.case=TRUE, value=TRUE)
     unzip(path.zip, exdir = storage.path, files = zipped.txt.name)
     outputdb <- suppressMessages(suppressWarnings(readr::read_delim(paste(storage.path, zipped.txt.name, sep = '/'), delim = ',', progress = F, 
-                                              col_names = c("Year", "Carrier Number", "Locality", "HCPCS Code", "Modifier", "Non-Facility Fee", 
-                                                      "Facility Fee", "Filler", "PCTC Indicator", "Status Code", "Multiple Surgery Indicator", 
-                                                      "50% Therapy Reduction Amount (non-institutional)", "50% Therapy Reduction Amount (institutional)", 
-                                                      "OPPS Indicator", "OPPS Non-Facility Fee", "OPPS Facility Fee"))
+                                  col_names = c("Year", "Carrier Number", "Locality", "HCPCS Code", "Modifier", "Non-Facility Fee", 
+                                                "Facility Fee", 'Filler', "PCTC Indicator", "Status Code", "Multiple Surgery Indicator", 
+                                                "50% Therapy Reduction Amount (non-institutional)", "50% Therapy Reduction Amount (institutional)", 
+                                                "OPPS Indicator", "OPPS Non-Facility Fee", "OPPS Facility Fee"),
+                                  col_types = readr::cols(
+                                    Year = readr::col_double(),
+                                    `Carrier Number` = readr::col_character(),
+                                    Locality = readr::col_character(),
+                                    `HCPCS Code` = readr::col_character(),
+                                    Modifier = readr::col_character(),
+                                    `Non-Facility Fee` = readr::col_double(),
+                                    `Facility Fee` = readr::col_double(),
+                                    'Filler' = readr::col_skip(),
+                                    `PCTC Indicator` = readr::col_character(),
+                                    `Status Code` = readr::col_character(),
+                                    `Multiple Surgery Indicator` = readr::col_character(),
+                                    `50% Therapy Reduction Amount (non-institutional)` = readr::col_character(),
+                                    `50% Therapy Reduction Amount (institutional)` = readr::col_character(),
+                                    `OPPS Indicator` = readr::col_character(),
+                                    `OPPS Non-Facility Fee` = readr::col_double(),
+                                    `OPPS Facility Fee` = readr::col_double()
+                                  ))
     ))
-    outputdb <- dplyr::select(outputdb, -8) # remove filler column
     outputdb <- dplyr::slice(outputdb, -((nrow(outputdb)-3):nrow(outputdb)))
     unlink (paste(storage.path, zipped.txt.name, sep = '/')) # delete unzipped .txt
     if(!keep.downloads){
@@ -86,7 +79,18 @@ localdb <- function(year,                    # last two digits of desired look-u
     res <- dplyr::mutate(res, Modifier = as.factor(Modifier)) 
     res <- dplyr::mutate(res, Modifier = dplyr::recode(Modifier, "  " = "none"))
   } else{
-    res <- joinrevisions(mpfs_all)  
+    res <- Reduce(function(db1, db2){
+      temp <- dplyr::left_join(db1, db2, by = c('Year', 'Carrier Number', 'Locality', 'HCPCS Code', 'Modifier', 'Status Code', 'PCTC Indicator', 'Multiple Surgery Indicator', 
+                                                '50% Therapy Reduction Amount (non-institutional)', '50% Therapy Reduction Amount (institutional)', 'OPPS Indicator'))
+      temp <- dplyr::mutate(temp, 'Facility Fee' = dplyr::coalesce(`Facility Fee.y`, `Facility Fee.x`), 'Non-Facility Fee' = dplyr::coalesce(`Non-Facility Fee.y`, `Non-Facility Fee.x`), 'OPPS Facility Fee' = 
+                              dplyr::coalesce(`OPPS Facility Fee.y`, `OPPS Facility Fee.x`), 'OPPS Non-Facility Fee' = dplyr::coalesce(`OPPS Non-Facility Fee.y`, `OPPS Non-Facility Fee.x`))
+      temp <- dplyr::select(temp, -`Facility Fee.x`, -`Facility Fee.y`, -`Non-Facility Fee.x`, -`Non-Facility Fee.y`, -`OPPS Facility Fee.x`, 
+                            -`OPPS Facility Fee.y`, -`OPPS Non-Facility Fee.x`, -`OPPS Non-Facility Fee.y`)
+      temp <- dplyr::full_join(temp, dplyr::anti_join(db2, db1, by = 'HCPCS Code'), by = c("Year", "Carrier Number", "Locality", "HCPCS Code", "Modifier", "PCTC Indicator", "Status Code", 
+                                                                                           "Multiple Surgery Indicator", "50% Therapy Reduction Amount (non-institutional)", "50% Therapy Reduction Amount (institutional)", 
+                                                                                           "OPPS Indicator", "Facility Fee", "Non-Facility Fee", "OPPS Facility Fee", "OPPS Non-Facility Fee")) # addend non-overlapping rows
+      return(temp)
+    }, mpfs_all)
     res<- dplyr::mutate(res, Modifier = as.factor(Modifier))
     res<- dplyr::mutate(res, Modifier = dplyr::recode(Modifier, "  " = "none"))
   }
