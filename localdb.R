@@ -1,7 +1,7 @@
 localdb <- function(year,                    # last two digits of desired look-up year
                     locality,                # optional: valid 7-digit HCFS identification number; if not specified, will output full database
                     storage.path = NULL,     # directory in which storage folder exists or should be created (default: current working dir)
-                    keep.downloads = T       # if T, downloaded files will not be deleted from storage folder, and will not need to be redownloaded for future operations.
+                    keep.downloads = TRUE    # if T, downloaded files will not be deleted from storage folder, and will not need to be redownloaded for future operations.
                                              # if F, downloaded files will be removed once database is generated. storage folder will be deleted if empty
                     ){
   if(!missing(locality)) {
