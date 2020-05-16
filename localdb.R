@@ -30,14 +30,14 @@ localdb <- function(year,                    # last two digits of desired look-u
     dblink <- xml2::read_html(siteurl)
     dblink <- rvest::html_nodes(dblink, "a")
     dblink <- rvest::html_attr(dblink, "href")
-    dblink <- grep("\\.zip", dblink, value = T)
+    dblink <- grep("\\.zip", dblink, value = TRUE)
     dblink <- paste(baseurl, dblink, sep = '')
     path.zip <- paste(storage.path, sub(".*/", "", dblink), sep = '/')
     if(!file.exists(path.zip)) download.file(dblink, path.zip)
     zipped.txt.name <- grep('\\.txt$', unzip(path.zip, list=TRUE)$Name, 
                              ignore.case=TRUE, value=TRUE)
     unzip(path.zip, exdir = storage.path, files = zipped.txt.name)
-    outputdb <- suppressMessages(suppressWarnings(readr::read_delim(paste(storage.path, zipped.txt.name, sep = '/'), delim = ',', progress = F, 
+    outputdb <- suppressMessages(suppressWarnings(readr::read_delim(paste(storage.path, zipped.txt.name, sep = '/'), delim = ',', progress = FALSE, 
                                   col_names = c("Year", "Carrier Number", "Locality", "HCPCS Code", "Modifier", "Non-Facility Fee", 
                                                 "Facility Fee", 'Filler', "PCTC Indicator", "Status Code", "Multiple Surgery Indicator", 
                                                 "50% Therapy Reduction Amount (non-institutional)", "50% Therapy Reduction Amount (institutional)", 
