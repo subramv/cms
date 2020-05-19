@@ -13,7 +13,7 @@ It increases ease of programmatic access to healthcare reimbursement via the R p
 The cms R package is not currently ready for use.
 To install the development version, run the following:
 ```r
-devtools::install_github("subramv1/cms")
+devtools::install_github("subramv/cms")
 ```
 
 ## Sample code
