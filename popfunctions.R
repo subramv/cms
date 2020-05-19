@@ -42,6 +42,5 @@ for(x in seq_along(otherindex)){
   locald[otherindex[x],6] <-locald[otherindex[x],6] - othersum  
 }
 locald$`Carrier Number`[locald$`Carrier Number` %in% c('10102', '10202', '10302')] <- c('10112', '10212', '10212', '10312')
-locald <- select(locald,c(1,2,6))
 
 readr::write_csv(locald, 'localitypopulations.csv')
