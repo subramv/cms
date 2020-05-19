@@ -96,21 +96,19 @@ get_mpfs <- function(year,                       # last two digits of desired lo
                     storage_path,                # directory in which storage folder exists or should be created (default: current working dir)
                     keep_downloads = TRUE,       # if TRUE, downloaded files will not be deleted from storage folder, and will not need to be redownloaded for future operations.
                                                  # if FALSE, downloaded files will be removed once database is generated. storage folder will be deleted if empty
-                    locality                    # optional: valid 7-digit HCFS identification number; if not specified, will output full database
+                    locality                     # optional: valid 7-digit HCFS identification number; if not specified, will output full database
                     ){
   if(!missing(locality)) {
     assertthat::assert_that(nchar(locality) == 7, msg = 'Locality code must be a valid 7-digit HCFS identification number')
     carrier.number <- substr(as.character(locality), 1, 5)
     localityid <- substr(as.character(locality), 6, 7)
   }
-  assertthat::assert_that(is.logical(join), msg = 'join must be a boolean with value TRUE or FALSE')
   assertthat::assert_that(14<year & year<=20, msg = 'year must be a two digit integer between 14 and 20')
-  storage_path = paste(storage_path, 'storage', sep = '')
-  if(!dir.exists(storage_path)) dir.create(storage_path) # create storage folder if it does not exist
+  if(!dir.exists(storage_path)) dir.create(storage_path, showWarnings = FALSE) # create storage folder if it does not exist
   assertthat::assert_that(dir.exists(storage_path), msg = 'Storage folder not found or could not be created; check that provided storage path is valid and R has write permissions')
   # --------------------------------------------
-  mpfs_all <- download_mpfs(year, storage_path, keep_downloads, locality)
-  join_mpfs(mpfs_all)
+  mpfs_all <- download_mpfs(year, storage_path, keep_downloads)
+  join_mpfs(mpfs_all, locality)
 }
 
   
