@@ -20,9 +20,9 @@ download_mpfs <- function(year, storage_path, keep_downloads){
     dblink <- paste(baseurl, dblink, sep = '')
     path.zip <- paste(storage_path, sub(".*/", "", dblink), sep = '/')
     if(!file.exists(path.zip)) utils::download.file(dblink, path.zip)
-    zipped.txt.name <- grep('\\.txt$', unzip(path.zip, list=TRUE)$Name, 
+    zipped.txt.name <- grep('\\.txt$', utils::unzip(path.zip, list=TRUE)$Name, 
                             ignore.case=TRUE, value=TRUE)
-    unzip(path.zip, exdir = storage_path, files = zipped.txt.name)
+    utils::unzip(path.zip, exdir = storage_path, files = zipped.txt.name)
     outputdb <- suppressMessages(suppressWarnings(readr::read_delim(paste(storage_path, zipped.txt.name, sep = '/'), delim = ',', progress = F, 
                                                                     col_names = c("Year", "Carrier Number", "Locality", "HCPCS Code", "Modifier", "Non-Facility Fee", 
                                                                                   "Facility Fee", 'Filler', "PCTC Indicator", "Status Code", "Multiple Surgery Indicator", 
@@ -64,30 +64,57 @@ download_mpfs <- function(year, storage_path, keep_downloads){
 }
 
 join_mpfs <- function(mpfs_all, locality){
+  carrier.number <- substr(as.character(locality), 1, 5)
+  localityid <- substr(as.character(locality), 6, 7)
   if(length(mpfs_all) == 1) {
     res <- mpfs_all[[1]] 
-    res <- dplyr::mutate(res, Modifier = as.factor(Modifier)) 
-    res <- dplyr::mutate(res, Modifier = dplyr::recode(Modifier, "  " = "none"))
+    res <- dplyr::mutate(res, Modifier = as.factor(.data$Modifier))
+    res <- dplyr::mutate(res, Modifier = dplyr::recode(.data$Modifier, "  " = "none"))
   } else{
     res <- Reduce(function(db1, db2){
-      temp <- dplyr::left_join(db1, db2, by = c('Year', 'Carrier Number', 'Locality', 'HCPCS Code', 'Modifier', 'Status Code', 'PCTC Indicator', 'Multiple Surgery Indicator', 
-                                                '50% Therapy Reduction Amount (non-institutional)', '50% Therapy Reduction Amount (institutional)', 'OPPS Indicator'))
-      temp <- dplyr::mutate(temp, 'Facility Fee' = dplyr::coalesce(`Facility Fee.y`, `Facility Fee.x`), 'Non-Facility Fee' = dplyr::coalesce(`Non-Facility Fee.y`, `Non-Facility Fee.x`), 'OPPS Facility Fee' = 
-                              dplyr::coalesce(`OPPS Facility Fee.y`, `OPPS Facility Fee.x`), 'OPPS Non-Facility Fee' = dplyr::coalesce(`OPPS Non-Facility Fee.y`, `OPPS Non-Facility Fee.x`))
-      temp <- dplyr::select(temp, -`Facility Fee.x`, -`Facility Fee.y`, -`Non-Facility Fee.x`, -`Non-Facility Fee.y`, -`OPPS Facility Fee.x`, 
-                            -`OPPS Facility Fee.y`, -`OPPS Non-Facility Fee.x`, -`OPPS Non-Facility Fee.y`)
-      temp <- dplyr::full_join(temp, dplyr::anti_join(db2, db1, by = 'HCPCS Code'), by = c("Year", "Carrier Number", "Locality", "HCPCS Code", "Modifier", "PCTC Indicator", "Status Code", 
-                                                                                           "Multiple Surgery Indicator", "50% Therapy Reduction Amount (non-institutional)", "50% Therapy Reduction Amount (institutional)", 
-                                                                                           "OPPS Indicator", "Facility Fee", "Non-Facility Fee", "OPPS Facility Fee", "OPPS Non-Facility Fee")) # addend non-overlapping rows
+      temp <- dplyr::left_join(db1, db2,
+                               by = c('Year', 'Carrier Number', 'Locality',
+                                      'HCPCS Code', 'Modifier', 'Status Code',
+                                      'PCTC Indicator',
+                                      'Multiple Surgery Indicator',
+                                      '50% Therapy Reduction Amount (non-institutional)',
+                                      '50% Therapy Reduction Amount (institutional)',
+                                      'OPPS Indicator'))
+      temp <- dplyr::mutate(temp,
+                            'Facility Fee' = dplyr::coalesce(.data$`Facility Fee.y`,
+                                                             .data$`Facility Fee.x`),
+                            'Non-Facility Fee' = dplyr::coalesce(.data$`Non-Facility Fee.y`,
+                                                                 .data$`Non-Facility Fee.x`),
+                            'OPPS Facility Fee' = dplyr::coalesce(.data$`OPPS Facility Fee.y`,
+                                                                  .data$`OPPS Facility Fee.x`),
+                            'OPPS Non-Facility Fee' = dplyr::coalesce(.data$`OPPS Non-Facility Fee.y`,
+                                                                      .data$`OPPS Non-Facility Fee.x`))
+      temp <- dplyr::select(temp, -.data$`Facility Fee.x`, -.data$`Facility Fee.y`,
+                            -.data$`Non-Facility Fee.x`, -.data$`Non-Facility Fee.y`,
+                            -.data$`OPPS Facility Fee.x`, -.data$`OPPS Facility Fee.y`,
+                            -.data$`OPPS Non-Facility Fee.x`, -.data$`OPPS Non-Facility Fee.y`)
+      temp <- dplyr::full_join(temp, dplyr::anti_join(db2, db1, by = 'HCPCS Code'),
+                               by = c("Year", "Carrier Number", "Locality", "HCPCS Code",
+                                      "Modifier", "PCTC Indicator", "Status Code", 
+                                      "Multiple Surgery Indicator",
+                                      "50% Therapy Reduction Amount (non-institutional)",
+                                      "50% Therapy Reduction Amount (institutional)",
+                                      "OPPS Indicator", "Facility Fee",
+                                      "Non-Facility Fee", "OPPS Facility Fee",
+                                      "OPPS Non-Facility Fee")) # addend non-overlapping rows
       return(temp)
     }, mpfs_all)
-    res<- dplyr::mutate(res, Modifier = as.factor(Modifier))
-    res<- dplyr::mutate(res, Modifier = dplyr::recode(Modifier, "  " = "none"))
+    res<- dplyr::mutate(res, Modifier = as.factor(.data$Modifier))
+    res<- dplyr::mutate(res, Modifier = dplyr::recode(.data$Modifier, "  " = "none"))
   }
   if(!missing(locality)){
-    assertthat::assert_that(carrier.number %in% res$`Carrier Number`, msg = 'Provided locality does not match entries in this database')
-    assertthat::assert_that(localityid %in% res$Locality, msg = 'Provided locality does not match entries in this database')
-    res <- dplyr::filter(res, `Carrier Number` == carrier.number, `Locality` == localityid)
+    assertthat::assert_that(carrier.number %in% res$`Carrier Number`,
+                            msg = 'Provided locality does not match entries in this database')
+    assertthat::assert_that(localityid %in% res$Locality,
+                            msg = 'Provided locality does not match entries in this database')
+    res <- dplyr::filter(res,
+                         .data$`Carrier Number` == carrier.number,
+                         .data$`Locality` == localityid)
   }
   return(res)
 }
@@ -105,6 +132,8 @@ join_mpfs <- function(mpfs_all, locality){
 #' @param locality 7-digit HCFS identification number; if not specified,
 #'   will return entire MPFS database (all localities)
 #' @return MPFS database for respective year and localities (data frame)
+#' @importFrom magrittr %>%
+#' @importFrom rlang .data
 #' @export
 get_mpfs <- function(year,                       # last two digits of desired look-up year
                     storage_path,                # directory in which storage folder exists or should be created (default: current working dir)
@@ -114,8 +143,6 @@ get_mpfs <- function(year,                       # last two digits of desired lo
                     ){
   if(!missing(locality)) {
     assertthat::assert_that(nchar(locality) == 7, msg = 'Locality code must be a valid 7-digit HCFS identification number')
-    carrier.number <- substr(as.character(locality), 1, 5)
-    localityid <- substr(as.character(locality), 6, 7)
   }
   assertthat::assert_that(14<year & year<=20, msg = 'year must be a two digit integer between 14 and 20')
   if(!dir.exists(storage_path)) dir.create(storage_path, showWarnings = FALSE) # create storage folder if it does not exist
@@ -124,8 +151,3 @@ get_mpfs <- function(year,                       # last two digits of desired lo
   mpfs_all <- download_mpfs(year, storage_path, keep_downloads)
   join_mpfs(mpfs_all, locality)
 }
-
-  
-
-
-  
