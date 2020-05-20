@@ -1,4 +1,5 @@
 Package: cms
+Type: Package
 Title: Tools for Calculating CMS Medicare Reimbursement
 Version: 0.1.0
 Authors@R: 
@@ -13,6 +14,10 @@ Description: Uses the CMS API to provide useRs databases containing yearly
     for the entire United States or only for specific localities. Currently,
     support is only provided for the Medicare Physician Fee Schedule (MPFS),
     but support will be expanded for other CMS databases in future versions.
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+Depends: R (>= 2.10)
 Imports:
     assertthat (>= 0.2),
     dplyr (>= 0.8),
@@ -22,9 +27,6 @@ Imports:
     rvest (>= 0.3),
     utils (>= 3.6),
     xml2 (>= 1.3)
-License: GPL-3
-Encoding: UTF-8
-LazyData: true
+URL: https://github.com/subramv/cms
+BugReports: https://github.com/subramv/cms/issues
 RoxygenNote: 7.1.0
-Depends: 
-    R (>= 2.10)
