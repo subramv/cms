@@ -92,6 +92,20 @@ join_mpfs <- function(mpfs_all, locality){
   return(res)
 }
 
+#' Access Medicare Physician Fee Schedule
+#' 
+#' Use the CMS API to download the MPFS database for any year between
+#' 2014 and 2020, inclusive.
+#' 
+#' @param year integer (min = 14; max = 20) indicating MPFS database year
+#' @param storage_path path to storing downloaded files (temporarily if
+#'   `keep_downloads` equals `FALSE`)
+#' @param keep_downloads if `TRUE`, stores compressed CMS data to prevent
+#'   re-downloading; if `FALSE`, deletes intermediate data after loading into R
+#' @param locality 7-digit HCFS identification number; if not specified,
+#'   will return entire MPFS database (all localities)
+#' @return MPFS database for respective year and localities (data frame)
+#' @export
 get_mpfs <- function(year,                       # last two digits of desired look-up year
                     storage_path,                # directory in which storage folder exists or should be created (default: current working dir)
                     keep_downloads = TRUE,       # if TRUE, downloaded files will not be deleted from storage folder, and will not need to be redownloaded for future operations.
