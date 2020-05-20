@@ -1,6 +1,6 @@
 #DEPENDENCIES: readr, tidyr, %>%
 
-# function that returns PFS localtity dictionary for 2020
+# function that returns PFS locality dictionary for 2020
 get_locality_key <- function(){ 
   rawdat <- readr::read_tsv('data-raw/18LOCCO.txt', skip = 2, 
                             col_names = c('Carrier Number', 'Locality',
