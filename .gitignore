@@ -2,6 +2,7 @@
 .Rhistory
 .RData
 .Ruserdata
-*\.txt
 *\.pdf
 *\.Rproj
+storage/
+docs
