@@ -6,7 +6,8 @@ Authors@R:
              role = c("aut", "cre"),
              email = "first.last@example.com"),
       person(given = "Raoul", family = "Wadhwa",
-             role = c("aut"), email = "raoulwadhwa@gmail.com"))
+             role = "aut", email = "raoulwadhwa@gmail.com"),
+      person(given = "Milind", family = "Desai"))
 Description: Uses the CMS API to provide useRs databases containing yearly
     Medicare reimbursement rates in the United States. Data can be acquired
     for the entire United States or only for specific localities. Currently,
