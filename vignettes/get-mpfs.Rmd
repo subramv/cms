@@ -1,0 +1,56 @@
+---
+title: "Introduction to cms"
+author: "Vigneshwar Subramanian & Raoul Wadhwa"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{get-mpfs}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+The cms package implements a set of tools to download and clean publically
+available Medicare data, published on <https://cms.gov>, for analysis in R. This
+vignette provides an overview of the key features of the package.
+
+## Medicare Physician Fee Schedule
+
+The `get_mpfs` function returns national payment files for the Medicare Physician
+Fee Schedule (MPFS). All revisions for a specified year between 2014 and 2020,
+inclusive (specified as 2-digit integer, 14 through 20) are downloaded from [the 
+CMS website](https://www.cms.gov/Medicare/Medicare-Fee-for-Service-Payment/PhysicianFeeSched/PFS-National-Payment-Amount-File)
+to a user-specified path. 
+
+```{r get_mpfs}
+library(cms)
+mpfs20 <- get_mpfs(20, storage_path = 'storage', keep_downloads = TRUE)
+head(mpfs20)
+```
+By default, `get_mpfs` will store downloaded `.zip` files so
+that subsequent calls to `get_mpfs` with the same year and storage path will not
+require redownloading the raw data to import the database. `get_mpfs` will 
+instead delete downloaded files by passing the argument `keep_downloads = FALSE`.
+
+Optionally, users can specify a valid 7-digit locality code (5-digit carrier number
++ 2-digit locality, passed as a single string) to instruct `get_mpfs` to return only
+the data corresponding to that locality:
+
+```{r get_mpfs locality}
+mpfs20_ohio <- get_mpfs(20, storage_path = 'storage', locality = '1520200')
+head(mpfs20_ohio)
+```
+
+## Medicare Locality Key
+
+The `locality_dict` dataset contains the locality definitions used by the MPFS, 
+updated for 2020.  
+
+```{r locality_dict}
+mpfs20_locality <- cms::locality_dict
+head(mpfs20_locality)

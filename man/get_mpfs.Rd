@@ -25,3 +25,9 @@ MPFS database for respective year and localities (data frame)
 Use the CMS API to download the MPFS database for any year between
 2014 and 2020, inclusive.
 }
+\examples{
+\dontrun{
+mpfs20 <- get_mpfs(20, storage_path = 'storage', keep_downloads = TRUE)
+mpfs20 <- get_mpfs(20, storage_path = 'storage', locality = '1520200')
+}
+}
