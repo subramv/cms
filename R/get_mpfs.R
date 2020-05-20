@@ -19,7 +19,7 @@ download_mpfs <- function(year, storage_path, keep_downloads){
     dblink <- grep("\\.zip", dblink, value = T)
     dblink <- paste(baseurl, dblink, sep = '')
     path.zip <- paste(storage_path, sub(".*/", "", dblink), sep = '/')
-    if(!file.exists(path.zip)) download.file(dblink, path.zip)
+    if(!file.exists(path.zip)) utils::download.file(dblink, path.zip)
     zipped.txt.name <- grep('\\.txt$', unzip(path.zip, list=TRUE)$Name, 
                             ignore.case=TRUE, value=TRUE)
     unzip(path.zip, exdir = storage_path, files = zipped.txt.name)
