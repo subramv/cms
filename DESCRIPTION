@@ -9,7 +9,9 @@ Authors@R:
              role = c("aut"), email = "raoulwadhwa@gmail.com"))
 Description: Uses the CMS API to provide useRs databases containing yearly
     Medicare reimbursement rates in the United States. Data can be acquired
-    for the entire United States or only for specific localities.
+    for the entire United States or only for specific localities. Currently,
+    support is only provided for the Medicare Physician Fee Schedule (MPFS),
+    but support will be expanded for other CMS databases in future versions.
 Imports:
     assertthat (>= 0.2),
     dplyr (>= 0.8),
