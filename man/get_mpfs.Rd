@@ -27,7 +27,10 @@ Use the CMS API to download the MPFS database for any year between
 }
 \examples{
 \dontrun{
+# get entire MPFS database for 2020
 mpfs20 <- get_mpfs(20, storage_path = 'storage', keep_downloads = TRUE)
-mpfs20 <- get_mpfs(20, storage_path = 'storage', locality = '1520200')
+
+# get 2019 MPFS database only for carrier 15202 and locality 00
+mpfs19 <- get_mpfs(19, storage_path = 'storage', locality = '1520200')
 }
 }
