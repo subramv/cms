@@ -11,5 +11,5 @@
 #'   \item{Fee Schedule Area}{character; description of fee schedule area}
 #'   \item{Counties}{character; counties included in Fee Schedule Area}
 #' }
-#' @source \url{}
+#' @source \url{https://www.cms.gov}
 "locality_dict"
