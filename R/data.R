@@ -11,5 +11,5 @@
 #'   \item{Fee Schedule Area}{character; description of fee schedule area}
 #'   \item{Counties}{character; counties included in Fee Schedule Area}
 #' }
-#' @source \url{https://www.cms.gov}
+#' @source \url{https://www.cms.gov/Medicare/Medicare-Fee-for-Service-Payment/PhysicianFeeSched/Locality}
 "locality_dict"
