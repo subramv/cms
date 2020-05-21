@@ -15,7 +15,7 @@ data frame with 113 rows and 5 columns:
 }
 }
 \source{
-\url{https://www.cms.gov}
+\url{https://www.cms.gov/Medicare/Medicare-Fee-for-Service-Payment/PhysicianFeeSched/Locality}
 }
 \usage{
 locality_dict

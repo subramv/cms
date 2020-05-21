@@ -64,8 +64,6 @@ download_mpfs <- function(year, storage_path, keep_downloads){
 }
 
 join_mpfs <- function(mpfs_all, locality){
-  carrier.number <- substr(as.character(locality), 1, 5)
-  localityid <- substr(as.character(locality), 6, 7)
   if(length(mpfs_all) == 1) {
     res <- mpfs_all[[1]] 
     res <- dplyr::mutate(res, Modifier = as.factor(.data$Modifier))
@@ -108,6 +106,8 @@ join_mpfs <- function(mpfs_all, locality){
     res<- dplyr::mutate(res, Modifier = dplyr::recode(.data$Modifier, "  " = "none"))
   }
   if(!missing(locality)){
+    carrier.number <- substr(as.character(locality), 1, 5)
+    localityid <- substr(as.character(locality), 6, 7)
     assertthat::assert_that(carrier.number %in% res$`Carrier Number`,
                             msg = 'Provided locality does not match entries in this database')
     assertthat::assert_that(localityid %in% res$Locality,
@@ -132,6 +132,14 @@ join_mpfs <- function(mpfs_all, locality){
 #' @param locality 7-digit HCFS identification number; if not specified,
 #'   will return entire MPFS database (all localities)
 #' @return MPFS database for respective year and localities (data frame)
+#' @examples
+#' \dontrun{
+#' # get entire MPFS database for 2020
+#' mpfs20 <- get_mpfs(20, storage_path = 'storage', keep_downloads = TRUE)
+#' 
+#' # get 2019 MPFS database only for carrier 15202 and locality 00
+#' mpfs19 <- get_mpfs(19, storage_path = 'storage', locality = '1520200')
+#' }
 #' @importFrom magrittr %>%
 #' @importFrom rlang .data
 #' @export
@@ -149,5 +157,9 @@ get_mpfs <- function(year,                       # last two digits of desired lo
   assertthat::assert_that(dir.exists(storage_path), msg = 'Storage folder not found or could not be created; check that provided storage path is valid and R has write permissions')
   # --------------------------------------------
   mpfs_all <- download_mpfs(year, storage_path, keep_downloads)
-  join_mpfs(mpfs_all, locality)
+  if(!missing(locality)) {
+    join_mpfs(mpfs_all, locality)
+  } else {
+    join_mpfs(mpfs_all)
+  }
 }

@@ -30,3 +30,7 @@ Imports:
 URL: https://github.com/subramv/cms
 BugReports: https://github.com/subramv/cms/issues
 RoxygenNote: 7.1.0
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
