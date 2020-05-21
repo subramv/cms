@@ -5,7 +5,7 @@ Version: 0.1.0
 Authors@R: 
     c(person(given = "Vigneshwar", family = "Subramanian",
              role = c("aut", "cre"),
-             email = "first.last@example.com"),
+             email = "vs347@cornell.edu"),
       person(given = "Raoul", family = "Wadhwa",
              role = "aut", email = "raoulwadhwa@gmail.com"),
       person(given = "Milind", family = "Desai", role = "ctb"))
