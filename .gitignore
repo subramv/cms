@@ -7,3 +7,4 @@
 storage/
 docs
 inst/doc
+*.tar.gz
