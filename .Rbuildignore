@@ -7,3 +7,6 @@ data-raw
 ^docs$
 ^pkgdown$
 ^storage$
+^LICENSE\.md$
+^NEWS\.md$
+^cran-comments\.md$
