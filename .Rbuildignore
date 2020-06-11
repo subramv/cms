@@ -10,3 +10,4 @@ data-raw
 ^LICENSE\.md$
 ^NEWS\.md$
 ^cran-comments\.md$
+^data-raw$
