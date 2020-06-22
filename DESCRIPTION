@@ -13,8 +13,8 @@ Description: Uses the 'CMS' application programming interface <https://dnav.cms.
     to provide users databases containing yearly
     Medicare reimbursement rates in the United States. Data can be acquired
     for the entire United States or only for specific localities. Currently,
-    support is only provided for the Medicare Physician Fee Schedule (MPFS),
-    but support will be expanded for other CMS databases in future versions.
+    support is only provided for the Medicare Physician Fee Schedule,
+    but support will be expanded for other 'CMS' databases in future versions.
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
