@@ -1,6 +1,6 @@
 Package: cms
 Type: Package
-Title: Tools for Calculating CMS Medicare Reimbursement
+Title: Calculate Medicare Reimbursement
 Version: 0.1.0
 Authors@R: 
     c(person(given = "Vigneshwar", family = "Subramanian",
