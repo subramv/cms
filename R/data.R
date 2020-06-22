@@ -30,9 +30,9 @@
 #'   \item{Status Code}{character; Medicare status code (e.g. A = Active code)}
 #'   \item{Multiple Surgery Indicator}{character; indicator of payment
 #'   adjustment rules for multiple procedures}
-#'   \item{50% Therapy Reduction Amount (non-institutional)}{numeric; multiple
+#'   \item{50\% Therapy Reduction Amount (non-institutional)}{numeric; multiple
 #'   procedure therapy reduction amount (non-institutional)}
-#'   \item{50% Therapy Reduction Amount (institutional)}{numeric; multiple
+#'   \item{50\% Therapy Reduction Amount (institutional)}{numeric; multiple
 #'   procedure therapy reduction amount (institutional)}
 #'   \item{OPPS Indicator}{character; indicator as to whether Outpatient
 #'   Prospective Payment System applies}
