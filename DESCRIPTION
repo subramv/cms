@@ -9,7 +9,8 @@ Authors@R:
       person(given = "Raoul", family = "Wadhwa",
              role = "aut", email = "raoulwadhwa@gmail.com"),
       person(given = "Milind", family = "Desai", role = "ctb"))
-Description: Uses the CMS API <https://dnav.cms.gov/api/healthdata> to provide useRs databases containing yearly
+Description: Uses the 'CMS' application programming interface <https://dnav.cms.gov/api/healthdata>
+    to provide users databases containing yearly
     Medicare reimbursement rates in the United States. Data can be acquired
     for the entire United States or only for specific localities. Currently,
     support is only provided for the Medicare Physician Fee Schedule (MPFS),
