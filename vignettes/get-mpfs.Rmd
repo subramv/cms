@@ -16,7 +16,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-The cms package implements a set of tools to download and clean publically available Medicare data, published on <https://cms.gov>, for analysis in R.
+The cms package implements a set of tools to download and clean publically available Medicare data, published on <https://www.cms.gov>, for analysis in R.
 This vignette provides an overview of the key features of the package.
 
 ## Medicare Physician Fee Schedule (MPFS)
