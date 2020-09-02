@@ -133,7 +133,7 @@ join_mpfs <- function(mpfs_all, locality){
 #'   will return entire MPFS database (all localities)
 #' @return MPFS database for respective year and localities (data frame)
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # get entire MPFS database for 2020
 #' mpfs20 <- get_mpfs(20, storage_path = 'storage', keep_downloads = TRUE)
 #' 
