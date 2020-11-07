@@ -24,9 +24,11 @@ vignettes/*.pdf
 *.utf8.md
 *.knit.md
 
-# pkgdown
-docs/
-
 # stored CMS data
 storage/
+
+# renv files
+.Rprofile
+renv.lock
+renv/
 
