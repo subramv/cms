@@ -1,10 +1,32 @@
-.Rproj.user
-.Rhistory
+# RStudio misc
 .RData
+.Rhistory
+.Rapp.history
 .Ruserdata
-*\.pdf
-*\.Rproj
+.Rproj.user
+
+# pkg build files
+*-Ex.R
+/*.tar.gz
+/*.Rcheck/
+
+# produced vignettes
+vignettes/*.html
+vignettes/*.pdf
+
+# tokens
+.Renviron
+.httr-oauth
+
+# knitr/Rmd misc
+*_cache/
+/cache/
+*.utf8.md
+*.knit.md
+
+# pkgdown
+docs/
+
+# stored CMS data
 storage/
-docs
-inst/doc
-*.tar.gz
+
